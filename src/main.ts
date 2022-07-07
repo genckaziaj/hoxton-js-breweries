@@ -1,25 +1,46 @@
-let state = {
+type Brewery = {
+  address_2: string | null;
+  address_3: string | null;
+  brewery_type: string;
+  city: string;
+  country: string;
+  county_province: string | null;
+  created_at: string;
+  id: number;
+  latitude: string | null;
+  longitude: string | null;
+  name: string;
+  obdb_id: string;
+  phone: string | null;
+  postal_code: string;
+  state: string;
+  street: string | null;
+  updated_at: string;
+  website_url: string | null;
+};
+
+type State = {
+  USState: string;
+  breweries: Brewery[];
+};
+
+let state: State = {
   USState: "",
   breweries: [],
 };
 
-// Q: Which state are we looking for? state.USState
-// Q: What breweries do we need to display? state.breweries
-
 function getBreweriesForState() {
-  // find breweries in this state
-  // put them in state
-  // rerender
+  fetch(
+    `https://api.openbrewerydb.org/breweries?by_state=${state.USState}&per_page=10`
+  )
+    .then((resp) => resp.json())
+    .then((breweries) => {
+      state.breweries = breweries;
+      render();
+    });
 }
 
 function renderHeader() {
-  // <h1>List of Breweries</h1>
-  // <header class="search-bar">
-  //   <form id="search-breweries-form" autocomplete="off">
-  //     <label for="search-breweries"><h2>Search breweries:</h2></label>
-  //     <input id="search-breweries" name="search-breweries" type="text" />
-  //   </form>
-  // </header>
   let mainEl = document.querySelector("main");
   if (mainEl === null) return;
 
@@ -52,10 +73,6 @@ function renderHeader() {
 }
 
 function renderBreweryList() {
-  // <article>
-  //   <ul class="breweries-list">
-  //   </ul>
-  // </article>
   let mainEl = document.querySelector("main");
   if (mainEl === null) return;
 
@@ -64,27 +81,77 @@ function renderBreweryList() {
   let breweriesUl = document.createElement("ul");
   breweriesUl.className = "breweries-list";
 
+  for (let brewery of state.breweries) {
+    renderSingleBrewery(brewery, breweriesUl);
+  }
+
   articleEl.append(breweriesUl);
   mainEl.append(articleEl);
 }
 
-function renderSingleBrewery() {
-  //     <li>
-  //       <h2>Snow Belt Brew</h2>
-  //       <div class="type">micro</div>
-  //       <section class="address">
-  //         <h3>Address:</h3>
-  //         <p>9511 Kile Rd</p>
-  //         <p><strong>Chardon, 44024</strong></p>
-  //       </section>
-  //       <section class="phone">
-  //         <h3>Phone:</h3>
-  //         <p>N/A</p>
-  //       </section>
-  //       <section class="link">
-  //         <a href="null" target="_blank">Visit Website</a>
-  //       </section>
-  //     </li>
+function renderSingleBrewery(brewery: Brewery, breweriesUl: HTMLUListElement) {
+  let breweryLi = document.createElement("li");
+
+  let breweryTitle = document.createElement("h2");
+  breweryTitle.textContent = brewery.name;
+
+  let breweryTypeDiv = document.createElement("div");
+  breweryTypeDiv.className = "type";
+  breweryTypeDiv.textContent = brewery.brewery_type;
+
+  let breweryAddressSection = document.createElement("section");
+  breweryAddressSection.className = "address";
+
+  let breweryAddressTitle = document.createElement("h3");
+  breweryAddressTitle.textContent = "Address";
+
+  let breweryAddressLine1 = document.createElement("p");
+  breweryAddressLine1.textContent = brewery.street;
+
+  let breweryAddressLine2 = document.createElement("p");
+
+  let breweryAddressLine2Strong = document.createElement("strong");
+  breweryAddressLine2Strong.textContent = `${brewery.city}, ${brewery.postal_code}`;
+
+  let breweryPhoneSection = document.createElement("section");
+  breweryAddressLine1.className = "phone";
+
+  let breweryPhoneTitle = document.createElement("h3");
+  breweryPhoneTitle.textContent = "Phone";
+
+  let breweryPhoneP = document.createElement("p");
+  breweryPhoneP.textContent = brewery.phone ? brewery.phone : "N/A";
+
+  let breweryLinkSection = document.createElement("section");
+  breweryLinkSection.className = "link";
+
+  let breweryLinkA = document.createElement("a");
+  if (brewery.website_url) {
+    breweryLinkA.href = brewery.website_url ? brewery.website_url : "#";
+    breweryLinkA.target = "_blank";
+    breweryLinkA.textContent = "Visit Website";
+  } else {
+    breweryLinkA.textContent = "No Website";
+  }
+
+  breweryLi.append(
+    breweryTitle,
+    breweryTypeDiv,
+    breweryAddressSection,
+    breweryPhoneSection,
+    breweryLinkSection
+  );
+
+  breweryAddressSection.append(
+    breweryAddressTitle,
+    breweryAddressLine1,
+    breweryAddressLine2
+  );
+  breweryAddressLine2.append(breweryAddressLine2Strong);
+  breweryPhoneSection.append(breweryPhoneTitle, breweryPhoneP);
+  breweryLinkSection.append(breweryLinkA);
+
+  breweriesUl.append(breweryLi);
 }
 
 function render() {
